@@ -10,3 +10,8 @@ Very Simple Golang Websocket Chat Example
 ```bash
   http://localhost:8080
  ```
+
+## reference
+[tutorialedge.net](https://tutorialedge.net/golang/go-websocket-tutorial)
+<br />
+[dasarpemrogramangolang.novalagung.com](https://dasarpemrogramangolang.novalagung.com/C-28-golang-web-socket.html)
