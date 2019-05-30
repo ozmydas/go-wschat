@@ -8,6 +8,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+/****/
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
@@ -15,15 +17,17 @@ var upgrader = websocket.Upgrader{
 
 var allConnection = make([]*websocket.Conn, 0)
 
+/****/
+
 func main() {
 	http.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
 		// upgrade jalur http jd buat websocket
 		conn, _ := upgrader.Upgrade(w, r, nil)
-		allConnection = append(allConnection, conn) // append koneksi baru ke list seluruh koneksi
+		allConnection = append(allConnection, conn) // append client ke list seluruh koneksi
 
-		// informasikan jika ada yg join
+		// informasikan jika ada client yg join
 		fmt.Printf("New Client Connected : %v\n", conn.RemoteAddr())
-		Broadcast(conn, 1, "Joined", false)
+		BroadcastMsg(conn, 1, "Joined", false)
 
 		for {
 			// baca pesan yg dikirim tiap koneksi
@@ -31,23 +35,12 @@ func main() {
 			if err != nil {
 				// jika ada koneksi yg error
 				if strings.Contains(err.Error(), "websocket: close") {
-					// hapus koneksi yg keluar
-
-					i := 0 // cari dulu offset yg mau dihapus dari list seluruh koneksi
-					for _, eachConn := range allConnection {
-						if eachConn == conn {
-							break // disini kita sudah dapat offset array
-						}
-
-						i++
-					}
-
-					allConnection[i] = allConnection[len(allConnection)-1] // copy array terakhir ke offset
-					allConnection = allConnection[:len(allConnection)-1]   // delete array terakhir
+					// hapus client yg keluar dari list seluruh koneksi
+					ClearClient(conn)
 
 					// informasikan jika ada keluar
 					fmt.Printf("%v Exited\n", conn.RemoteAddr())
-					Broadcast(conn, 1, "Exited", false)
+					BroadcastMsg(conn, 1, "Exited", false)
 					return
 				}
 
@@ -56,7 +49,7 @@ func main() {
 
 			// Write message back to each connection
 			fmt.Printf("%s sent: %s\n", conn.RemoteAddr(), string(msg))
-			Broadcast(conn, msgType, string(msg), false)
+			BroadcastMsg(conn, msgType, string(msg), false)
 		}
 	})
 
@@ -68,7 +61,7 @@ func main() {
 	http.ListenAndServe(":8080", nil)
 } // end func
 
-func Broadcast(conn *websocket.Conn, msgType int, msg string, isSendMe bool) {
+func BroadcastMsg(conn *websocket.Conn, msgType int, msg string, isSendMe bool) {
 	for _, eachConn := range allConnection {
 
 		if eachConn == conn {
@@ -79,4 +72,19 @@ func Broadcast(conn *websocket.Conn, msgType int, msg string, isSendMe bool) {
 
 		eachConn.WriteMessage(msgType, []byte(conn.RemoteAddr().String()+" "+msg))
 	}
-}
+} // end func
+
+func ClearClient(conn *websocket.Conn) {
+	i := 0 // cari dulu offset yg mau dihapus dari list seluruh koneksi
+	for _, eachConn := range allConnection {
+
+		if eachConn == conn {
+			break // disini kita sudah dapat offset array
+		}
+
+		i++
+	}
+
+	allConnection[i] = allConnection[len(allConnection)-1] // copy array terakhir ke offset
+	allConnection = allConnection[:len(allConnection)-1]   // delete array terakhir
+} // end func

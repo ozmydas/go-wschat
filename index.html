@@ -24,9 +24,7 @@
 		};
 
 		function send() {
-			socket.send(JSON.stringify({
-				Message: input.value
-			}));
+			socket.send(input.value);
 			input.value = "";
 		}
 	</script>
