@@ -20,6 +20,7 @@ var allConnection = make([]*websocket.Conn, 0)
 /****/
 
 func main() {
+	// route untuk back-end
 	http.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
 		// upgrade jalur http jd buat websocket
 		conn, _ := upgrader.Upgrade(w, r, nil)
@@ -53,14 +54,17 @@ func main() {
 		}
 	})
 
+	// route untuk front-end
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "index.html")
 	})
 
+	// start http server
 	fmt.Println("running on 8080")
 	http.ListenAndServe(":8080", nil)
 } // end func
 
+/** method untuk mengirim pesan ke semua client terhubung **/
 func BroadcastMsg(conn *websocket.Conn, msgType int, msg string, isSendMe bool) {
 	for _, eachConn := range allConnection {
 
@@ -74,6 +78,7 @@ func BroadcastMsg(conn *websocket.Conn, msgType int, msg string, isSendMe bool) 
 	}
 } // end func
 
+/** method untuk membersihkan list koneksi dari client yg sudah keluar **/
 func ClearClient(conn *websocket.Conn) {
 	i := 0 // cari dulu offset yg mau dihapus dari list seluruh koneksi
 	for _, eachConn := range allConnection {
